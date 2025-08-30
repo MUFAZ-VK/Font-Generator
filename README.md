@@ -2,7 +2,9 @@
 
 A modern web-based font generator that converts plain text into stylized Unicode fonts. Built with Flask and featuring a responsive design with TailwindCSS.
 
-![🔥Font Generator Demo](https://font-generator-seven.vercel.app)
+#🔥Font Generator Demo
+
+👉 https://font-generator-seven.vercel.app/
 
 ## Features
 
