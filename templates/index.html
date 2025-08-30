@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Font Generator - Stylish Unicode Fonts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#8b5cf6',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-lg border-b border-gray-200">
+        <div class="container mx-auto px-4 py-6">
+            <h1 class="text-3xl md:text-4xl font-bold text-center bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                <i class="fas fa-font mr-3"></i>Font Generator
+            </h1>
+            <p class="text-gray-600 text-center mt-2 text-sm md:text-base">
+                Transform your text into stylish Unicode fonts instantly
+            </p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Input Form -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8">
+            <form method="POST" class="space-y-6">
+                <div>
+                    <label for="text" class="block text-sm font-semibold text-gray-700 mb-3">
+                        <i class="fas fa-edit mr-2 text-primary"></i>Enter your text
+                    </label>
+                    <textarea
+                        id="text"
+                        name="text"
+                        rows="3"
+                        placeholder="Type your text here to generate stylish fonts..."
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-200 text-lg resize-none"
+                        maxlength="500"
+                    >{{ input_text }}</textarea>
+                    <div class="flex justify-between items-center mt-2">
+                        <small class="text-gray-500">Maximum 500 characters</small>
+                        <span id="charCount" class="text-sm text-gray-500">{{ input_text|length }}/500</span>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button
+                        type="submit"
+                        class="flex-1 bg-gradient-to-r from-primary to-secondary text-white px-8 py-3 rounded-xl font-semibold text-lg hover:from-primary/90 hover:to-secondary/90 focus:ring-4 focus:ring-primary/25 transition-all duration-200 transform hover:scale-[1.02] shadow-lg"
+                    >
+                        <i class="fas fa-magic mr-2"></i>Generate Fonts
+                    </button>
+                    
+                    {% if converted_fonts %}
+                    <button
+                        type="button"
+                        onclick="clearResults()"
+                        class="bg-gray-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-600 focus:ring-4 focus:ring-gray/25 transition-all duration-200"
+                    >
+                        <i class="fas fa-times mr-2"></i>Clear
+                    </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        {% if converted_fonts %}
+        <!-- Search/Filter -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
+            <div class="flex flex-col sm:flex-row gap-4 items-center">
+                <div class="flex-1 w-full">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input
+                            type="text"
+                            id="searchInput"
+                            placeholder="Search font styles..."
+                            class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-200"
+                        >
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600 whitespace-nowrap">
+                        <span id="visibleCount">{{ converted_fonts|length }}</span> of {{ converted_fonts|length }} styles
+                    </span>
+                    <button
+                        onclick="copyAllFonts()"
+                        class="bg-green-600 text-white px-4 py-3 rounded-xl font-semibold hover:bg-green-700 focus:ring-4 focus:ring-green/25 transition-all duration-200 whitespace-nowrap"
+                        title="Copy all fonts to clipboard"
+                    >
+                        <i class="fas fa-copy mr-2"></i>Copy All
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Grid -->
+        <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for font_key, font_data in converted_fonts.items() %}
+            <div class="font-card bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+                <div class="p-6">
+                    <!-- Font Name Header -->
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-gray-800 text-lg truncate" data-font-name="{{ font_data.name|lower }}">
+                            {{ font_data.name }}
+                        </h3>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs px-2 py-1 bg-gray-100 rounded-full text-gray-600">
+                                {{ font_data.text|length }} chars
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Font Preview -->
+                    <div class="relative">
+                        <div class="bg-gray-50 rounded-xl p-4 mb-4 min-h-[80px] flex items-center">
+                            <p class="font-preview text-xl md:text-2xl text-gray-800 break-words leading-relaxed w-full" 
+                               style="word-break: break-word; overflow-wrap: break-word;">
+                                {{ font_data.text }}
+                            </p>
+                        </div>
+                        
+                        <!-- Copy Button -->
+                        <button
+                            onclick="copyToClipboard('{{ font_data.text|e }}', this)"
+                            class="copy-btn w-full bg-primary text-white py-3 px-4 rounded-xl font-semibold hover:bg-primary/90 focus:ring-4 focus:ring-primary/25 transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center space-x-2"
+                            title="Copy {{ font_data.name }} to clipboard"
+                        >
+                            <i class="fas fa-copy"></i>
+                            <span>Copy</span>
+                        </button>
+
+                        <!-- Success feedback -->
+                        <div class="copy-success hidden absolute inset-0 bg-green-500 text-white rounded-xl flex items-center justify-center">
+                            <i class="fas fa-check mr-2"></i>
+                            <span>Copied!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- No Results Message -->
+        <div id="noResults" class="hidden text-center py-12">
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+                <i class="fas fa-search text-gray-400 text-4xl mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">No fonts found</h3>
+                <p class="text-gray-500">Try adjusting your search terms</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not converted_fonts and input_text %}
+        <!-- No Fonts Generated Message -->
+        <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-8 text-center">
+            <i class="fas fa-exclamation-triangle text-yellow-600 text-4xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-yellow-800 mb-2">No fonts generated</h3>
+            <p class="text-yellow-700">Try entering some text with letters and numbers to see the stylish font variations.</p>
+        </div>
+        {% endif %}
+
+        {% if not input_text %}
+        <!-- Welcome Message -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 text-center">
+            <div class="max-w-2xl mx-auto">
+                <i class="fas fa-font text-primary text-6xl mb-6"></i>
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4">
+                    Welcome to Font Generator
+                </h2>
+                <p class="text-gray-600 text-lg mb-6">
+                    Transform your ordinary text into eye-catching stylized fonts using Unicode characters. 
+                    Perfect for social media, messages, and creative projects.
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                    <div class="text-center">
+                        <div class="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-keyboard text-primary text-2xl"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-800 mb-2">Type Your Text</h3>
+                        <p class="text-gray-600 text-sm">Enter any text you want to stylize</p>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="bg-secondary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-magic text-secondary text-2xl"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-800 mb-2">Generate Fonts</h3>
+                        <p class="text-gray-600 text-sm">Get multiple stylized variations instantly</p>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-copy text-green-600 text-2xl"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-800 mb-2">Copy & Use</h3>
+                        <p class="text-gray-600 text-sm">One-click copy to use anywhere</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- About Section -->
+    <section class="bg-gradient-to-r from-primary/5 to-secondary/5 py-12 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-user-circle mr-3 text-primary"></i>About the Developer
+                    </h2>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div class="text-center md:text-left">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">MUHAMMED MUFAZ</h3>
+                        <p class="text-lg text-primary font-semibold mb-4">AI ENGINEER</p>
+                        
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-center md:justify-start">
+                                <i class="fab fa-github text-gray-700 mr-3 text-lg"></i>
+                                <a href="https://github.com/mufaz-vk" target="_blank" rel="noopener noreferrer" 
+                                   class="text-gray-700 hover:text-primary transition-colors duration-200">
+                                    github.com/mufaz-vk
+                                </a>
+                            </div>
+                            
+                            <div class="flex items-center justify-center md:justify-start">
+                                <i class="fab fa-linkedin text-blue-600 mr-3 text-lg"></i>
+                                <a href="https://www.linkedin.com/in/mufazvk/" target="_blank" rel="noopener noreferrer" 
+                                   class="text-gray-700 hover:text-primary transition-colors duration-200">
+                                    linkedin.com/in/mufazvk
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl p-6">
+                            <i class="fas fa-code text-4xl text-primary mb-4"></i>
+                            <p class="text-gray-700 leading-relaxed">
+                                Passionate AI Engineer dedicated to creating innovative solutions that make technology more accessible and user-friendly. This font generator brings the power of Unicode styling to everyone.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-8 pt-6 border-t border-gray-200 text-center">
+                    <p class="text-gray-600 text-sm">
+                        <i class="fas fa-heart text-red-500 mr-2"></i>
+                        Built with passion using Flask, Python, and modern web technologies
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-8">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-600">
+                © 2025 Font Generator by MUHAMMED MUFAZ. Transform your text with beautiful Unicode fonts.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg transform translate-x-full transition-transform duration-300 z-50">
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-check"></i>
+            <span>Copied to clipboard!</span>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
